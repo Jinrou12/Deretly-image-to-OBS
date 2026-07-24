@@ -145,17 +145,10 @@ def process_clipboard_image(img: Image.Image, icon: pystray.Icon = None):
         return
 
     last_image_hash = img_hash
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"clipboard_{timestamp}.png"
-    filepath = SAVE_DIR / filename
-
     try:
         save_img = img.convert("RGBA") if img.mode != "RGBA" else img
 
-        # 1. Save timestamped file
-        save_img.save(filepath, format="PNG")
-
-        # 2. Overwrite latest_clipboard.png safely
+        # 1. Overwrite latest_clipboard.png safely
         try:
             save_img.save(LATEST_IMAGE_PATH, format="PNG")
         except Exception:
@@ -167,17 +160,17 @@ def process_clipboard_image(img: Image.Image, icon: pystray.Icon = None):
             except Exception as err:
                 print(f"Warning updating latest_clipboard.png: {err}")
 
-        # Update latest_timestamp.txt to notify OBS script of new image
+        # 2. Update latest_timestamp.txt to notify OBS script of new image
         try:
             (SAVE_DIR / "latest_timestamp.txt").write_text(str(time.time()), encoding="utf-8")
         except Exception:
             pass
 
         # 3. Inject CF_HDROP format into Windows Clipboard for direct Ctrl+V pasting!
-        inject_file_drop_to_clipboard(filepath, save_img)
+        inject_file_drop_to_clipboard(LATEST_IMAGE_PATH, save_img)
 
         saved_count += 1
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Auto-saved #{saved_count}: {filename}")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Auto-saved #{saved_count}: latest_clipboard.png")
         print(" -> Ready! You can now press Ctrl+V directly in OBS, Filmora, or any app!")
 
         pass
